@@ -28,7 +28,7 @@ resources:
 patches:
   - target:
       kind: Deployment
-      name: payment-gateway
+      name: checkout-gateway
     patch: |-
       - op: add
         path: /spec/template/metadata/labels/simulation.io~1propagation

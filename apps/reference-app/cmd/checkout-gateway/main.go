@@ -1,5 +1,5 @@
-// payment-gateway composition root (Service A).
-// Business logic lives in internal/payment — this file only wires dependencies.
+// checkout-gateway composition root (Service A).
+// Business logic lives in internal/checkout — this file only wires dependencies.
 //
 //	Client → [Gateway] → FraudChecker (gRPC) → …
 package main
@@ -17,10 +17,10 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	fraudv1 "github.com/servicemesh/reference-app/gen/fraud/v1"
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 	"github.com/servicemesh/reference-app/internal/env"
 	"github.com/servicemesh/reference-app/internal/grpcx"
-	"github.com/servicemesh/reference-app/internal/payment"
+	"github.com/servicemesh/reference-app/internal/checkout"
 	"github.com/servicemesh/reference-app/internal/sim"
 )
 
@@ -37,9 +37,9 @@ func main() {
 	}
 	defer conn.Close()
 
-	// Adapter: generated client → payment.FraudChecker port.
-	gw := payment.NewGateway(log, payment.GRPCFraudChecker{Client: fraudv1.NewFraudCheckerClient(conn)}, payment.RandomAuthCode{})
-	srv := &payment.GRPCServer{Gateway: gw}
+	// Adapter: generated client → checkout.FraudChecker port.
+	gw := checkout.NewGateway(log, checkout.GRPCFraudChecker{Client: fraudv1.NewFraudCheckerClient(conn)}, checkout.RandomOrderCode{})
+	srv := &checkout.GRPCServer{Gateway: gw}
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -48,12 +48,12 @@ func main() {
 	}
 
 	gs := grpc.NewServer(grpc.UnaryInterceptor(sim.ServerInterceptor()))
-	paymentv1.RegisterPaymentGatewayServer(gs, srv)
+	checkoutv1.RegisterCheckoutGatewayServer(gs, srv)
 	reflection.Register(gs)
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Info("payment-gateway listening", "port", port, "fraud", fraudEndpoint)
+		log.Info("checkout-gateway listening", "port", port, "fraud", fraudEndpoint)
 		errCh <- gs.Serve(lis)
 	}()
 

@@ -1,0 +1,26 @@
+// checkout.v1 — Service A (checkout-gateway) public API.
+// Toy NFT marketplace entrypoint; never virtualized.
+syntax = "proto3";
+package checkout.v1;
+option go_package = "github.com/servicemesh/reference-app/gen/checkout/v1;checkoutv1";
+
+service CheckoutGateway {
+  // Place an NFT marketplace order after consulting fraud-checker.
+  rpc ProcessCheckout (CheckoutRequest) returns (CheckoutResponse);
+}
+
+message CheckoutRequest {
+  string transaction_id = 1;
+  string nft_token      = 2; // collectible / listing token (demo only — not a card PAN)
+  int64  amount_cents   = 3; // listing price in cents
+  string currency       = 4;
+}
+
+message CheckoutResponse {
+  string transaction_id  = 1;
+  string status          = 2; // APPROVED | DECLINED
+  string order_code      = 3;
+  string decline_reason   = 4;
+  int32  risk_score      = 5; // echoed from fraud-checker for the demo client
+  string recommendation  = 6; // echoed from fraud-checker
+}

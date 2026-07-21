@@ -3,7 +3,7 @@
 # Prerequisite: make build-images  (packages host binaries into images)
 #
 # Topology:
-#   test-client → payment-gateway:9001 → fraud-checker:9002
+#   test-client → checkout-gateway:9001 → fraud-checker:9002
 #        no header  → external-risk:9003
 #        header set → microcks-mock:9090
 #
@@ -37,8 +37,8 @@ services:
       - external-risk
       - microcks-mock
 
-  payment-gateway:
-    image: reference-app/payment-gateway:latest
+  checkout-gateway:
+    image: reference-app/checkout-gateway:latest
     environment:
       GRPC_PORT: "9001"
       FRAUD_CHECKER_ENDPOINT: fraud-checker:9002
@@ -50,8 +50,8 @@ services:
   test-client:
     image: reference-app/test-client:latest
     environment:
-      PAYMENT_GATEWAY_ENDPOINT: payment-gateway:9001
+      CHECKOUT_GATEWAY_ENDPOINT: checkout-gateway:9001
     depends_on:
-      - payment-gateway
+      - checkout-gateway
     profiles:
       - test

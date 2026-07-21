@@ -43,13 +43,13 @@ func (c *Checker) CheckFraud(ctx context.Context, req *fraudv1.FraudCheckRequest
 
 	c.log.Info("CheckFraud",
 		"txn", req.GetTransactionId(),
-		"card", req.GetCardToken(),
+		"nft", req.GetNftToken(),
 		"simulation", scenario,
 		"target", resolved.Target,
 	)
 
 	riskResp, err := resolved.Client.EvaluateRisk(ctx, &riskv1.RiskRequest{
-		CardToken:   req.GetCardToken(),
+		NftToken:   req.GetNftToken(),
 		AmountCents: req.GetAmountCents(),
 	})
 	if err != nil {

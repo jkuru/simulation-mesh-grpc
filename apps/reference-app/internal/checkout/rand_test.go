@@ -1,4 +1,4 @@
-package payment_test
+package checkout_test
 
 import "math/rand"
 

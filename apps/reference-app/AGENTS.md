@@ -1,6 +1,6 @@
 # AGENTS.md — apps/reference-app
 
-**reference-app** — sample payment application (option B monorepo naming).
+**reference-app** — sample NFT marketplace application (option B monorepo naming).
 
 | Mode | Design | Notes |
 | --- | --- | --- |

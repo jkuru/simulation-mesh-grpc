@@ -104,7 +104,7 @@ make install
 kubectl apply -f my-simulation.yaml
 
 # 3) Service team
-kubectl label deploy payment-gateway fraud-checker \
+kubectl label deploy checkout-gateway fraud-checker \
   simulation.io/propagation=enabled -n poc
 ```
 

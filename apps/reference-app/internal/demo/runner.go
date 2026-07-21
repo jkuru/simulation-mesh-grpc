@@ -9,13 +9,13 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 	"github.com/servicemesh/reference-app/internal/sim"
 )
 
-// Default demo card / amount (same for both paths).
+// Default demo NFT / amount (same for both paths).
 const (
-	DemoCardToken   = "tok_low_risk_4242"
+	DemoNftToken   = "nft_low_risk_4242"
 	DemoAmountCents = int64(5000)
 	DemoCurrency    = "USD"
 )
@@ -36,9 +36,9 @@ func OverrideCases(scenario string) []Case {
 	}
 }
 
-// Runner executes demo cases concurrently against a PaymentGateway.
+// Runner executes demo cases concurrently against a CheckoutGateway.
 type Runner struct {
-	Gateway PaymentGateway
+	Gateway CheckoutGateway
 	// Clock is optional; nil uses time.Now (inject for tests if needed).
 	Now func() time.Time
 }
@@ -72,9 +72,9 @@ func (r *Runner) call(parent context.Context, c Case, now func() time.Time) Resu
 	}
 
 	start := now()
-	resp, err := r.Gateway.ProcessPayment(ctx, &paymentv1.PaymentRequest{
+	resp, err := r.Gateway.ProcessCheckout(ctx, &checkoutv1.CheckoutRequest{
 		TransactionId: c.Txn,
-		CardToken:     DemoCardToken,
+		NftToken:     DemoNftToken,
 		AmountCents:   DemoAmountCents,
 		Currency:      DemoCurrency,
 	})
@@ -99,9 +99,9 @@ func VirtualizationConfirmed(results []Result) bool {
 // Write errors from w are ignored for the teaching client (stdout never fails
 // in practice); tests use bytes.Buffer. Signature keeps error for API stability.
 func FormatReport(w io.Writer, endpoint string, results []Result, checkVirtualization bool) error {
-	_, _ = fmt.Fprintln(w, "SIMULATION FRAMEWORK POC — Integration Test")
+	_, _ = fmt.Fprintln(w, "NFT MARKETPLACE DEMO — Virtualization proof")
 	_, _ = fmt.Fprintln(w)
-	_, _ = fmt.Fprintf(w, "payment-gateway: %s\n", endpoint)
+	_, _ = fmt.Fprintf(w, "checkout-gateway: %s\n", endpoint)
 	_, _ = fmt.Fprintln(w)
 
 	for i, r := range results {
@@ -114,7 +114,7 @@ func FormatReport(w io.Writer, endpoint string, results []Result, checkVirtualiz
 	if VirtualizationConfirmed(results) {
 		_, _ = fmt.Fprint(w,
 			"✓ Virtualization confirmed\n",
-			"  Same card. Same amount. Different outcome.\n",
+			"  Same NFT. Same price. Different outcome.\n",
 			"  Scenario controlled entirely by header.\n",
 		)
 		return nil
@@ -125,7 +125,7 @@ func FormatReport(w io.Writer, endpoint string, results []Result, checkVirtualiz
 
 func printResult(w io.Writer, n int, r Result) {
 	_, _ = fmt.Fprintf(w, "[%d] %s\n", n, r.Case.Label)
-	_, _ = fmt.Fprintln(w, "    card:   tok_low_risk_4242")
+	_, _ = fmt.Fprintln(w, "    nft:    nft_low_risk_4242")
 	_, _ = fmt.Fprintln(w, "    amount: $50.00")
 	if r.Case.Scenario != "" {
 		_, _ = fmt.Fprintf(w, "    header: %s: %s\n", sim.Header, r.Case.Scenario)
@@ -136,8 +136,8 @@ func printResult(w io.Writer, n int, r Result) {
 		return
 	}
 	_, _ = fmt.Fprintf(w, "    result: %s\n", r.Resp.GetStatus())
-	if r.Resp.GetAuthCode() != "" {
-		_, _ = fmt.Fprintf(w, "    auth:   %s\n", r.Resp.GetAuthCode())
+	if r.Resp.GetOrderCode() != "" {
+		_, _ = fmt.Fprintf(w, "    order:  %s\n", r.Resp.GetOrderCode())
 	}
 	if r.Resp.GetDeclineReason() != "" {
 		_, _ = fmt.Fprintf(w, "    reason: %s\n", r.Resp.GetDeclineReason())

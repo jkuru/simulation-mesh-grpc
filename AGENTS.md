@@ -24,7 +24,7 @@ Do **not** teach app teams to copy `apps/reference-app/kube` Istio YAML.
 
 | Name | Path | Meaning |
 | --- | --- | --- |
-| **reference-app** | `apps/reference-app` | Sample payment application (only demo app) |
+| **reference-app** | `apps/reference-app` | Sample NFT marketplace application (only demo app) |
 | **virtualization-framework** | `apps/virtualization-framework` | Operator + CRD product |
 | **reference-app-with-framework** | `examples/reference-app-with-framework` | Example: framework drives reference-app on mesh |
 | **virtualization-contract** | `packages/virtualization-contract` | Optional shared constants |

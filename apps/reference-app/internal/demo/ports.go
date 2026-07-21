@@ -4,15 +4,15 @@ package demo
 import (
 	"context"
 
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 )
 
-// PaymentGateway is the outbound dependency of the demo runner.
-type PaymentGateway interface {
-	ProcessPayment(ctx context.Context, req *paymentv1.PaymentRequest) (*paymentv1.PaymentResponse, error)
+// CheckoutGateway is the outbound dependency of the demo runner.
+type CheckoutGateway interface {
+	ProcessCheckout(ctx context.Context, req *checkoutv1.CheckoutRequest) (*checkoutv1.CheckoutResponse, error)
 }
 
-// Case is one payment attempt in the demo.
+// Case is one checkout attempt in the demo.
 type Case struct {
 	Label    string
 	Scenario string // empty = no simulation header
@@ -22,7 +22,7 @@ type Case struct {
 // Result is the outcome of one Case.
 type Result struct {
 	Case    Case
-	Resp    *paymentv1.PaymentResponse
+	Resp    *checkoutv1.CheckoutResponse
 	Err     error
 	Elapsed int64 // nanoseconds; wall clock filled by Runner
 }

@@ -13,6 +13,21 @@ control plane → **golden path**.
 One request header — `test-data-simulation-action-name` — selects a scenario.
 Real internal services stay real. Only third-party egress is virtualized.
 
+### Sample domain (toy NFT marketplace)
+
+The demo app is a **fictional NFT marketplace** checkout flow used only to
+teach mesh virtualization:
+
+```text
+test-client → checkout-gateway → fraud-checker → external-risk
+                 (nft_token + price)
+```
+
+**Not a banking, card, or payments product.** No real PANs, card networks,
+customer data, or production financial systems. Unrelated to any employer.
+`fraud-checker` / `external-risk` are generic e‑commerce risk services in the
+demo, not card-issuer infrastructure.
+
 ---
 
 ## Publish to GitHub
@@ -250,7 +265,7 @@ internals**. The operator generates those objects from the CR.
 
 | Project | Path | Role |
 | --- | --- | --- |
-| **reference-app** | [`apps/reference-app`](apps/reference-app/) | Sample payment app (empathy + mesh literacy) |
+| **reference-app** | [`apps/reference-app`](apps/reference-app/) | Toy NFT marketplace app (empathy + mesh literacy) |
 | **virtualization-framework** | [`apps/virtualization-framework`](apps/virtualization-framework/) | **Platform product** (operator + CRD + webhooks) |
 | **reference-app-with-framework** | [`examples/reference-app-with-framework`](examples/reference-app-with-framework/) | **Golden path** consumer recipe |
 | **virtualization-contract** | [`packages/virtualization-contract`](packages/virtualization-contract/) | Shared header/label/backend constants |

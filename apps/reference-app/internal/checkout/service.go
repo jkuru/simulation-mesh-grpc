@@ -1,53 +1,53 @@
-package payment
+package checkout
 
 import (
 	"context"
 	"log/slog"
 
 	fraudv1 "github.com/servicemesh/reference-app/gen/fraud/v1"
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 	"github.com/servicemesh/reference-app/internal/sim"
 )
 
-// Gateway is the payment authorization use-case (Service A).
+// Gateway is the checkout authorization use-case (Service A).
 //
 // It never interprets simulation scenario names for product decisions —
 // only logs them and relies on FraudChecker (which propagates the header).
 type Gateway struct {
 	log   *slog.Logger
 	fraud FraudChecker
-	auth  AuthCodeGenerator
+	auth  OrderCodeGenerator
 }
 
 // NewGateway constructs a Gateway. Nil logger/auth get safe defaults.
-func NewGateway(log *slog.Logger, fraud FraudChecker, auth AuthCodeGenerator) *Gateway {
+func NewGateway(log *slog.Logger, fraud FraudChecker, auth OrderCodeGenerator) *Gateway {
 	if log == nil {
 		log = slog.Default()
 	}
 	if auth == nil {
-		auth = RandomAuthCode{}
+		auth = RandomOrderCode{}
 	}
 	return &Gateway{log: log, fraud: fraud, auth: auth}
 }
 
-// ProcessPayment orchestrates fraud check then approves or declines.
-func (g *Gateway) ProcessPayment(ctx context.Context, req *paymentv1.PaymentRequest) (*paymentv1.PaymentResponse, error) {
+// ProcessCheckout orchestrates fraud check then approves or declines.
+func (g *Gateway) ProcessCheckout(ctx context.Context, req *checkoutv1.CheckoutRequest) (*checkoutv1.CheckoutResponse, error) {
 	scenario := sim.ScenarioFromContext(ctx)
-	g.log.Info("ProcessPayment",
+	g.log.Info("ProcessCheckout",
 		"txn", req.GetTransactionId(),
-		"card", req.GetCardToken(),
+		"nft", req.GetNftToken(),
 		"amount_cents", req.GetAmountCents(),
 		"simulation", scenario,
 	)
 
 	fraudResp, err := g.fraud.CheckFraud(ctx, &fraudv1.FraudCheckRequest{
 		TransactionId: req.GetTransactionId(),
-		CardToken:     req.GetCardToken(),
+		NftToken:     req.GetNftToken(),
 		AmountCents:   req.GetAmountCents(),
 	})
 	if err != nil {
 		g.log.Error("fraud check failed", "err", err)
-		return &paymentv1.PaymentResponse{
+		return &checkoutv1.CheckoutResponse{
 			TransactionId: req.GetTransactionId(),
 			Status:        "DECLINED",
 			DeclineReason: "FRAUD_CHECK_UNAVAILABLE",
@@ -55,8 +55,8 @@ func (g *Gateway) ProcessPayment(ctx context.Context, req *paymentv1.PaymentRequ
 	}
 
 	if fraudResp.GetRecommendation() == "DECLINE" {
-		g.log.Info("payment DECLINED", "txn", req.GetTransactionId(), "reason", fraudResp.GetReason())
-		return &paymentv1.PaymentResponse{
+		g.log.Info("checkout DECLINED", "txn", req.GetTransactionId(), "reason", fraudResp.GetReason())
+		return &checkoutv1.CheckoutResponse{
 			TransactionId:  req.GetTransactionId(),
 			Status:         "DECLINED",
 			DeclineReason:  fraudResp.GetReason(),
@@ -66,11 +66,11 @@ func (g *Gateway) ProcessPayment(ctx context.Context, req *paymentv1.PaymentRequ
 	}
 
 	auth := g.auth.Generate()
-	g.log.Info("payment APPROVED", "txn", req.GetTransactionId(), "auth", auth)
-	return &paymentv1.PaymentResponse{
+	g.log.Info("checkout APPROVED", "txn", req.GetTransactionId(), "auth", auth)
+	return &checkoutv1.CheckoutResponse{
 		TransactionId:  req.GetTransactionId(),
 		Status:         "APPROVED",
-		AuthCode:       auth,
+		OrderCode:       auth,
 		RiskScore:      fraudResp.GetRiskScore(),
 		Recommendation: fraudResp.GetRecommendation(),
 	}, nil

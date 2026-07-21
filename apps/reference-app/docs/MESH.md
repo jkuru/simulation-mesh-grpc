@@ -56,7 +56,7 @@ kubectl -n poc logs -f job/reference-app-mesh-test
 
 | Resource | Role |
 | --- | --- |
-| Deployments payment-gateway, fraud-checker | Real mesh services |
+| Deployments checkout-gateway, fraud-checker | Real mesh services |
 | external-risk | Real third-party stand-in |
 | microcks (simulation-system) | Virtual backend |
 | ServiceEntry external-risk-api.com | Logical third-party host |
@@ -77,7 +77,7 @@ ConfigMap `poc-config`:
 
 | Symptom | Check |
 | --- | --- |
-| Job fails dial payment-gateway | `kubectl -n poc get pods`; wait for 2/2 sidecars |
+| Job fails dial checkout-gateway | `kubectl -n poc get pods`; wait for 2/2 sidecars |
 | Always APPROVED with header | VS applied? Header on call? `kubectl -n poc get vs` |
 | fraud-checker cannot dial `external-risk-api.com` | Istio DNS capture annotation on fraud-checker (see kustomize patch) |
 | `exec format error` | Rebuild with `make build-images` (Linux binaries, not macOS) |

@@ -6,7 +6,7 @@ BIN_DIR := bin
 PROTO_DIR := proto
 GEN_DIR := gen
 IMAGE_PREFIX ?= reference-app
-SERVICES := payment-gateway fraud-checker external-risk microcks-mock test-client
+SERVICES := checkout-gateway fraud-checker external-risk microcks-mock test-client
 # Container images must be Linux (kind/docker), not host OS binaries.
 GOOS_IMG ?= linux
 GOARCH_IMG ?= $(shell go env GOARCH)
@@ -44,7 +44,7 @@ generate: deps
 		-I $(PROTO_DIR) \
 		--go_out=$(GEN_DIR) --go_opt=paths=source_relative \
 		--go-grpc_out=$(GEN_DIR) --go-grpc_opt=paths=source_relative \
-		$(PROTO_DIR)/payment/v1/payment.proto \
+		$(PROTO_DIR)/checkout/v1/checkout.proto \
 		$(PROTO_DIR)/fraud/v1/fraud.proto \
 		$(PROTO_DIR)/risk/v1/risk.proto
 	@echo "generated into $(GEN_DIR)/"
@@ -52,7 +52,7 @@ generate: deps
 # Host-native binaries (for make demo on macOS/Linux).
 build-local: generate
 	@mkdir -p $(BIN_DIR)
-	go build -o $(BIN_DIR)/payment-gateway ./cmd/payment-gateway
+	go build -o $(BIN_DIR)/checkout-gateway ./cmd/checkout-gateway
 	go build -o $(BIN_DIR)/fraud-checker   ./cmd/fraud-checker
 	go build -o $(BIN_DIR)/external-risk   ./cmd/external-risk
 	go build -o $(BIN_DIR)/microcks-mock   ./cmd/microcks-mock
@@ -62,7 +62,7 @@ build-local: generate
 # Linux binaries for container images (GOOS=linux).
 build-linux: generate
 	@mkdir -p $(BIN_DIR)
-	GOOS=$(GOOS_IMG) GOARCH=$(GOARCH_IMG) CGO_ENABLED=0 go build -o $(BIN_DIR)/payment-gateway ./cmd/payment-gateway
+	GOOS=$(GOOS_IMG) GOARCH=$(GOARCH_IMG) CGO_ENABLED=0 go build -o $(BIN_DIR)/checkout-gateway ./cmd/checkout-gateway
 	GOOS=$(GOOS_IMG) GOARCH=$(GOARCH_IMG) CGO_ENABLED=0 go build -o $(BIN_DIR)/fraud-checker   ./cmd/fraud-checker
 	GOOS=$(GOOS_IMG) GOARCH=$(GOARCH_IMG) CGO_ENABLED=0 go build -o $(BIN_DIR)/external-risk   ./cmd/external-risk
 	GOOS=$(GOOS_IMG) GOARCH=$(GOARCH_IMG) CGO_ENABLED=0 go build -o $(BIN_DIR)/microcks-mock   ./cmd/microcks-mock
@@ -92,7 +92,7 @@ down:
 
 # Images expected by kube/kustomize (imagePullPolicy: IfNotPresent).
 # Builds host binaries then packages them (distroless) — no in-image Go compile.
-# Load into kind: kind load docker-image $(IMAGE_PREFIX)/payment-gateway:latest …
+# Load into kind: kind load docker-image $(IMAGE_PREFIX)/checkout-gateway:latest …
 build-images: build-linux
 	@set -e; for s in $(SERVICES); do \
 		echo "==> packaging $(IMAGE_PREFIX)/$$s:latest"; \

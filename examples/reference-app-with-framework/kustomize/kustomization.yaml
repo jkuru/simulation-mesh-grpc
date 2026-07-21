@@ -8,7 +8,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - configmap.yaml
-  - payment-gateway.yaml
+  - checkout-gateway.yaml
   - fraud-checker.yaml
   - external-risk.yaml
   - microcks.yaml

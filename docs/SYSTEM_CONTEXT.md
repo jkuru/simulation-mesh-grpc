@@ -16,7 +16,8 @@ selects a scenario; only third-party egress is substituted.
 ## 2. Topology (reference-app services)
 
 ```
-test-client → payment-gateway → fraud-checker → external RiskService
+test-client → checkout-gateway → fraud-checker → external RiskService
+(NFT marketplace demo domain — not banking/cards)
                                     │
                     no header  → real external-risk
                     header set → virtual backend (scenario)

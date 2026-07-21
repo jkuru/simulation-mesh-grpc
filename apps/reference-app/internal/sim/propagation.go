@@ -7,7 +7,7 @@
 // internal call chain so that, when a mesh service finally dials a third
 // party, the data plane (or local router) still knows which scenario to use.
 //
-//	test-client  --header-->  payment-gateway  --header-->  fraud-checker
+//	test-client  --header-->  checkout-gateway  --header-->  fraud-checker
 //	                                                          |
 //	                     EvaluateRisk(+header) ---------------+
 //	                                                          v

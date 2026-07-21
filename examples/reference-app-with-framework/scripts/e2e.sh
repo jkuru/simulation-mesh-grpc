@@ -60,7 +60,7 @@ build_images() {
   log "building virtualization-framework image"
   make -C "$FW" image
   if kubectl config current-context | grep -q kind; then
-    for s in payment-gateway fraud-checker external-risk microcks-mock test-client; do
+    for s in checkout-gateway fraud-checker external-risk microcks-mock test-client; do
       kind load docker-image "${IMAGE_PREFIX}/${s}:latest" --name "$CLUSTER"
     done
     kind load docker-image virtualization-framework:latest --name "$CLUSTER"
@@ -81,12 +81,12 @@ deploy_app() {
     die "kustomize/ must not contain VirtualService/ServiceEntry/EnvoyFilter"
   fi
   kubectl apply -k kustomize/
-  kubectl -n poc rollout restart deploy/external-risk deploy/fraud-checker deploy/payment-gateway 2>/dev/null || true
+  kubectl -n poc rollout restart deploy/external-risk deploy/fraud-checker deploy/checkout-gateway 2>/dev/null || true
   kubectl -n simulation-system rollout restart deploy/microcks 2>/dev/null || true
   kubectl -n poc rollout status deploy/external-risk --timeout=180s
   kubectl -n simulation-system rollout status deploy/microcks --timeout=180s
   kubectl -n poc rollout status deploy/fraud-checker --timeout=240s
-  kubectl -n poc rollout status deploy/payment-gateway --timeout=240s
+  kubectl -n poc rollout status deploy/checkout-gateway --timeout=240s
 }
 
 apply_manifest() {

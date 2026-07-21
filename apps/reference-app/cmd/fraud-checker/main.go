@@ -1,7 +1,7 @@
 // fraud-checker composition root (Service B).
 // Business logic + local routing live in internal/fraud; this wires gRPC clients.
 //
-//	payment-gateway → [Checker] → RiskResolver → RiskService (external | microcks)
+//	checkout-gateway → [Checker] → RiskResolver → RiskService (external | microcks)
 package main
 
 import (

@@ -1,19 +1,19 @@
 // Package risk implements third-party and virtual RiskService backends.
 //
-// Interface-first: CardScorer and ScenarioStore are the ports; ExternalService
+// Interface-first: NftScorer and ScenarioStore are the ports; ExternalService
 // and VirtualService are the use-cases bound to those ports.
 package risk
 
-// ScoreResult is a pure domain outcome from card scoring.
+// ScoreResult is a pure domain outcome from NFT risk scoring.
 type ScoreResult struct {
 	Score   int32
 	Decision string
 	Factors []string
 }
 
-// CardScorer scores a card token for the "real" external risk path.
-type CardScorer interface {
-	Score(cardToken string) ScoreResult
+// NftScorer scores a NFT token for the "real" external risk path.
+type NftScorer interface {
+	Score(nftToken string) ScoreResult
 }
 
 // Scenario is a named virtual response.

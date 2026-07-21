@@ -22,7 +22,7 @@ ISTIO_VERSION="${ISTIO_VERSION:-1.24.2}"
 ISTIOCTL_CACHE="${ISTIOCTL_CACHE:-$HOME/.cache/reference-app/istio-${ISTIO_VERSION}}"
 SKIP_CLUSTER_CREATE="${SKIP_CLUSTER_CREATE:-0}"
 KEEP_CLUSTER="${KEEP_CLUSTER:-0}"
-SERVICES=(payment-gateway fraud-checker external-risk microcks-mock test-client)
+SERVICES=(checkout-gateway fraud-checker external-risk microcks-mock test-client)
 
 log() { printf '==> %s\n' "$*"; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -133,13 +133,13 @@ deploy_stack() {
   fi
   # :latest tag does not change — force pods to pick up newly loaded images.
   log "restarting deployments to pull freshly loaded images"
-  kubectl -n poc rollout restart deploy/external-risk deploy/fraud-checker deploy/payment-gateway
+  kubectl -n poc rollout restart deploy/external-risk deploy/fraud-checker deploy/checkout-gateway
   kubectl -n simulation-system rollout restart deploy/microcks
   log "waiting for workloads"
   kubectl -n poc rollout status deploy/external-risk --timeout=180s
   kubectl -n simulation-system rollout status deploy/microcks --timeout=180s
   kubectl -n poc rollout status deploy/fraud-checker --timeout=240s
-  kubectl -n poc rollout status deploy/payment-gateway --timeout=240s
+  kubectl -n poc rollout status deploy/checkout-gateway --timeout=240s
   kubectl -n poc get pods -o wide
   kubectl -n simulation-system get pods -o wide
 }

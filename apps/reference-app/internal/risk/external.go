@@ -11,11 +11,11 @@ import (
 // ExternalService is the "real" third-party RiskService stand-in.
 type ExternalService struct {
 	log    *slog.Logger
-	scorer CardScorer
+	scorer NftScorer
 }
 
 // NewExternalService constructs ExternalService. Nil scorer → TokenPrefixScorer.
-func NewExternalService(log *slog.Logger, scorer CardScorer) *ExternalService {
+func NewExternalService(log *slog.Logger, scorer NftScorer) *ExternalService {
 	if log == nil {
 		log = slog.Default()
 	}
@@ -25,11 +25,11 @@ func NewExternalService(log *slog.Logger, scorer CardScorer) *ExternalService {
 	return &ExternalService{log: log, scorer: scorer}
 }
 
-// EvaluateRisk scores the card token.
+// EvaluateRisk scores the NFT token.
 func (s *ExternalService) EvaluateRisk(ctx context.Context, req *riskv1.RiskRequest) (*riskv1.RiskResponse, error) {
-	result := s.scorer.Score(req.GetCardToken())
+	result := s.scorer.Score(req.GetNftToken())
 	s.log.Info("EvaluateRisk",
-		"card", req.GetCardToken(),
+		"nft", req.GetNftToken(),
 		"amount_cents", req.GetAmountCents(),
 		"score", result.Score,
 		"decision", result.Decision,

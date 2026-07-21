@@ -84,7 +84,7 @@ tool. Every file is written to be read and understood, not just executed.
 | Single header activates virtualization | `cmd/test-client/main.go` — sends `test-data-simulation-action-name: fraud-declined` |
 | Header propagates through A → B chain | `internal/sim/propagation.go` — server + client interceptors |
 | Third-party call virtualized, not A or B | `kube/overlays/dev/virtual-service-external-risk.yaml` — VirtualService on third-party host only |
-| Real service code is unchanged | `cmd/payment-gateway/main.go` and `cmd/fraud-checker/main.go` contain zero simulation logic |
+| Real service code is unchanged | `cmd/checkout-gateway/main.go` and `cmd/fraud-checker/main.go` contain zero simulation logic |
 | Scenario switching without restart | Test client sends `fraud-approved` vs `fraud-declined` — Microcks returns different responses |
 | Local mode vs mesh mode | Docker Compose uses app-level interceptor; Kubernetes uses EnvoyFilter |
 | What the framework generates | `kube/overlays/dev/` — all Istio resources shown explicitly |
@@ -98,17 +98,17 @@ tool. Every file is written to be read and understood, not just executed.
 ```
 Test Client
   │
-  ▼ gRPC: ProcessPayment(transactionId, cardToken, amount)
-payment-gateway  (Service A – port 9001)
+  ▼ gRPC: ProcessCheckout(transactionId, nftToken, amount)
+checkout-gateway  (Service A – port 9001)
   │
-  ▼ gRPC: CheckFraud(transactionId, cardToken, amount)
+  ▼ gRPC: CheckFraud(transactionId, nftToken, amount)
 fraud-checker  (Service B – port 9002)
   │
-  ▼ gRPC: EvaluateRisk(cardToken, amount)
+  ▼ gRPC: EvaluateRisk(nftToken, amount)
 external-risk-api.com  (Third Party – port 443)
   │
   ▼ RiskResponse { risk_score: 5, decision: "APPROVE" }
-fraud-checker → payment-gateway → Test Client
+fraud-checker → checkout-gateway → Test Client
 APPROVED
 ```
 
@@ -117,9 +117,9 @@ APPROVED
 ```
 Test Client
   │
-  ▼ gRPC: ProcessPayment(...)
+  ▼ gRPC: ProcessCheckout(...)
     metadata: test-data-simulation-action-name: fraud-declined
-payment-gateway  (Service A – real, unmodified)
+checkout-gateway  (Service A – real, unmodified)
   │  [Envoy or interceptor propagates header]
   ▼
 fraud-checker  (Service B – real, unmodified)
@@ -133,7 +133,7 @@ Microcks  (virtual backend)
   RiskResponse { risk_score: 92, decision: "DECLINE" }
   │
   ▼
-fraud-checker → payment-gateway → Test Client
+fraud-checker → checkout-gateway → Test Client
 DECLINED  (same card, same amount, different outcome — scenario controlled)
 ```
 
@@ -143,18 +143,18 @@ Services A and B do not change. The routing decision is made entirely in the mes
 
 ## 4. Service Descriptions
 
-### 4.1 payment-gateway (Service A)
+### 4.1 checkout-gateway (Service A)
 
 **Responsibility:** Entry point for payment authorization. Orchestrates the fraud check and makes the final payment decision.
 
-**gRPC server:** exposes `PaymentGateway.ProcessPayment`
+**gRPC server:** exposes `CheckoutGateway.ProcessCheckout`
 
 **Logic:**
 
-1. Receive `PaymentRequest`
+1. Receive `CheckoutRequest`
 2. Call `fraud-checker.CheckFraud` with the transaction data
-3. If recommendation is `DECLINE` → return `PaymentResponse{ status: "DECLINED" }`
-4. If recommendation is `APPROVE` → return `PaymentResponse{ status: "APPROVED", auth_code: <generated> }`
+3. If recommendation is `DECLINE` → return `CheckoutResponse{ status: "DECLINED" }`
+4. If recommendation is `APPROVE` → return `CheckoutResponse{ status: "APPROVED", auth_code: <generated> }`
 
 **Simulation awareness:** none. The service logs the value of `test-data-simulation-action-name` if present in incoming metadata, but only for observability. It does not inspect or act on it.
 
@@ -198,8 +198,8 @@ This is the service whose outbound call gets virtualized. It always calls `EXTER
 
 **Logic:**
 
-- Card token prefix `tok_low_risk_*` → risk score 10, decision `APPROVE`
-- Card token prefix `tok_high_risk_*` → risk score 85, decision `DECLINE`
+- Card token prefix `nft_low_risk_*` → risk score 10, decision `APPROVE`
+- Card token prefix `nft_high_risk_*` → risk score 85, decision `DECLINE`
 - All other tokens → risk score 20, decision `APPROVE`
 
 This service exists only in docker-compose. In Kubernetes it is replaced by a real external service. The `ServiceEntry` in the dev overlay declares the external host. The `VirtualService` redirects calls to Microcks when the simulation header is present.
@@ -210,9 +210,9 @@ This service exists only in docker-compose. In Kubernetes it is replaced by a re
 
 **Behaviour:**
 
-1. Send `ProcessPayment` with card `tok_low_risk_4242`, amount `$50.00` — no simulation header
+1. Send `ProcessCheckout` with card `nft_low_risk_4242`, amount `$50.00` — no simulation header
 2. Log the response
-3. Send `ProcessPayment` with the same card and amount — with header `fraud-declined`
+3. Send `ProcessCheckout` with the same card and amount — with header `fraud-declined`
 4. Log the response
 5. Print comparison summary
 
@@ -222,15 +222,15 @@ This service exists only in docker-compose. In Kubernetes it is replaced by a re
 SIMULATION FRAMEWORK POC — Integration Test
 
 [1] Real path (no simulation header)
-    card:   tok_low_risk_4242
+    card:   nft_low_risk_4242
     amount: $50.00
     ────────────────────────────────
     result: APPROVED
-    auth:   AUTH-3821-K
+    auth:   ORDER-3821-K
     fraud:  risk_score=10, recommendation=APPROVE
 
 [2] Simulated path (fraud-declined scenario)
-    card:   tok_low_risk_4242  ← same card
+    card:   nft_low_risk_4242  ← same card
     amount: $50.00             ← same amount
     header: test-data-simulation-action-name: fraud-declined
     ────────────────────────────────
@@ -247,25 +247,25 @@ SIMULATION FRAMEWORK POC — Integration Test
 
 ## 5. gRPC API Definitions
 
-### 5.1 payment-gateway
+### 5.1 checkout-gateway
 
 ```protobuf
 syntax = "proto3";
-package payment.v1;
-option go_package = "github.com/your-org/reference-app/gen/payment/v1;paymentv1";
+package checkout.v1;
+option go_package = "github.com/your-org/reference-app/gen/checkout/v1;checkoutv1";
 
-service PaymentGateway {
-  rpc ProcessPayment (PaymentRequest) returns (PaymentResponse);
+service CheckoutGateway {
+  rpc ProcessCheckout (CheckoutRequest) returns (CheckoutResponse);
 }
 
-message PaymentRequest {
+message CheckoutRequest {
   string transaction_id = 1;
-  string card_token     = 2;
+  string nft_token     = 2;
   int64  amount_cents   = 3;
   string currency       = 4;
 }
 
-message PaymentResponse {
+message CheckoutResponse {
   string transaction_id = 1;
   string status         = 2; // APPROVED | DECLINED
   string auth_code      = 3;
@@ -286,7 +286,7 @@ service FraudChecker {
 
 message FraudCheckRequest {
   string transaction_id = 1;
-  string card_token     = 2;
+  string nft_token     = 2;
   int64  amount_cents   = 3;
 }
 
@@ -310,7 +310,7 @@ service RiskService {
 }
 
 message RiskRequest {
-  string card_token   = 1;
+  string nft_token   = 1;
   int64  amount_cents = 2;
 }
 
@@ -436,7 +436,7 @@ apps/reference-app/
 ├── go.mod                             ← Go module definition
 │
 ├── proto/
-│   ├── payment/v1/payment.proto
+│   ├── checkout/v1/checkout.proto
 │   ├── fraud/v1/fraud.proto
 │   └── risk/v1/risk.proto
 │
@@ -456,7 +456,7 @@ apps/reference-app/
 │       └── propagation.go             ← server + client interceptors
 │
 ├── cmd/
-│   ├── payment-gateway/
+│   ├── checkout-gateway/
 │   │   └── main.go                    ← Service A
 │   ├── fraud-checker/
 │   │   └── main.go                    ← Service B
@@ -466,7 +466,7 @@ apps/reference-app/
 │       └── main.go                    ← sends test requests, prints diff
 │
 ├── build/
-│   ├── Dockerfile.payment-gateway
+│   ├── Dockerfile.checkout-gateway
 │   ├── Dockerfile.fraud-checker
 │   ├── Dockerfile.external-risk
 │   └── Dockerfile.test-client
@@ -481,7 +481,7 @@ apps/reference-app/
     └── kustomize/
         ├── base/
         │   ├── kustomization.yaml
-        │   ├── payment-gateway.yaml   ← Deployment + Service
+        │   ├── checkout-gateway.yaml   ← Deployment + Service
         │   └── fraud-checker.yaml     ← Deployment + Service
         └── overlays/
             ├── dev/
@@ -519,7 +519,7 @@ apps/reference-app/
 
 ## 10. Environment Configuration
 
-### 10.1 payment-gateway
+### 10.1 checkout-gateway
 
 | Variable | Default | Description |
 | --- | --- | --- |
@@ -541,7 +541,7 @@ apps/reference-app/
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PAYMENT_GATEWAY_ENDPOINT` | `payment-gateway:9001` | Address of the payment gateway |
+| `CHECKOUT_GATEWAY_ENDPOINT` | `checkout-gateway:9001` | Address of the payment gateway |
 | `SCENARIO` | *(empty)* | If set, overrides the scenario sent in the simulation header |
 
 ### 10.4 docker-compose vs Kubernetes ConfigMap
@@ -591,21 +591,21 @@ docker-compose down
 **What you will see in logs:**
 
 ```
-payment-gateway  | received ProcessPayment txn=txn-001 card=tok_low_risk_4242 amount=5000
-payment-gateway  | calling fraud-checker
+checkout-gateway  | received ProcessCheckout txn=txn-001 card=nft_low_risk_4242 amount=5000
+checkout-gateway  | calling fraud-checker
 fraud-checker    | received CheckFraud txn=txn-001
 fraud-checker    | simulation header absent — calling real external risk API
-external-risk    | EvaluateRisk card=tok_low_risk_4242 → score=10 decision=APPROVE
+external-risk    | EvaluateRisk card=nft_low_risk_4242 → score=10 decision=APPROVE
 fraud-checker    | risk_score=10 recommendation=APPROVE
-payment-gateway  | payment APPROVED auth=AUTH-3821-K
+checkout-gateway  | payment APPROVED auth=ORDER-3821-K
 
-payment-gateway  | received ProcessPayment txn=txn-002 card=tok_low_risk_4242 amount=5000
-payment-gateway  | simulation header: fraud-declined
-payment-gateway  | calling fraud-checker
+checkout-gateway  | received ProcessCheckout txn=txn-002 card=nft_low_risk_4242 amount=5000
+checkout-gateway  | simulation header: fraud-declined
+checkout-gateway  | calling fraud-checker
 fraud-checker    | received CheckFraud txn=txn-002
 fraud-checker    | simulation header: fraud-declined — routing to Microcks
 fraud-checker    | risk_score=92 recommendation=DECLINE
-payment-gateway  | payment DECLINED reason=HIGH_RISK_SCORE
+checkout-gateway  | payment DECLINED reason=HIGH_RISK_SCORE
 ```
 
 ### 11.3 Kubernetes mode (Istio)
@@ -625,7 +625,7 @@ kubectl apply -k kube/kustomize/overlays/dev
 kubectl apply -f simulation/simulation-manifest.yaml -n poc
 
 # 5. Label services for header propagation
-kubectl label deployment payment-gateway simulation.io/propagation=enabled -n poc
+kubectl label deployment checkout-gateway simulation.io/propagation=enabled -n poc
 kubectl label deployment fraud-checker simulation.io/propagation=enabled -n poc
 
 # 6. Watch SimulationManifest reach Ready
@@ -634,7 +634,7 @@ kubectl get simm -n poc -w
 # 7. Run test client
 kubectl run test-client \
   --image=your-registry.io/test-client:latest \
-  --env="PAYMENT_GATEWAY_ENDPOINT=payment-gateway-svc.poc.svc.cluster.local:9001" \
+  --env="CHECKOUT_GATEWAY_ENDPOINT=checkout-gateway-svc.poc.svc.cluster.local:9001" \
   --restart=Never -n poc
 
 # 8. View results
@@ -658,7 +658,7 @@ kubectl logs test-client -n poc
 
 ## 12. Kubernetes Manifests Reference
 
-### 12.1 base/payment-gateway.yaml
+### 12.1 base/checkout-gateway.yaml
 
 Standard Kubernetes Deployment and Service. Notable fields:
 
@@ -667,11 +667,11 @@ spec:
   template:
     metadata:
       labels:
-        app: payment-gateway
+        app: checkout-gateway
         # simulation.io/propagation=enabled added separately by operator or kubectl label
     spec:
       containers:
-        - name: payment-gateway
+        - name: checkout-gateway
           envFrom:
             - configMapRef:
                 name: poc-config
@@ -914,7 +914,7 @@ spec:
           rpc EvaluateRisk (RiskRequest) returns (RiskResponse);
         }
         message RiskRequest {
-          string card_token   = 1;
+          string nft_token   = 1;
           int64  amount_cents = 2;
         }
         message RiskResponse {
@@ -947,7 +947,7 @@ When applied to the cluster (with the v2.0 virtualization-framework operator ins
 | --- | --- |
 | `internal/sim/propagation.go` | The only simulation-aware application code. Two interceptors, ~50 lines. Understand this first. |
 | `cmd/fraud-checker/main.go` | Shows how interceptors are registered and how `SIMULATION_MODE` controls local routing. |
-| `cmd/payment-gateway/main.go` | Shows a service that is completely unaware of simulation — it just registers the interceptor without any conditional logic. |
+| `cmd/checkout-gateway/main.go` | Shows a service that is completely unaware of simulation — it just registers the interceptor without any conditional logic. |
 | `cmd/test-client/main.go` | Shows the complete test caller pattern: same request, two headers, two outcomes. |
 | `kube/overlays/dev/virtual-service-external-risk.yaml` | The single VirtualService routing rule. Two rules: header present → Microcks; no header → real. |
 | `kube/overlays/dev/envoyfilter-inbound-capture.yaml` | How Envoy captures the header into filter state. Replaces the need for the server interceptor in Kubernetes. |
@@ -1002,7 +1002,7 @@ Use this to verify reference-app is working correctly after each mode of deploym
 
 - [ ] `make generate` completes without errors
 - [ ] `make build` completes without errors
-- [ ] `docker-compose up` starts all five containers (payment-gateway, fraud-checker, external-risk, microcks, test-client)
+- [ ] `docker-compose up` starts all five containers (checkout-gateway, fraud-checker, external-risk, microcks, test-client)
 - [ ] `docker-compose run test-client` prints two results: APPROVED then DECLINED
 - [ ] Log for second request shows routing to Microcks in fraud-checker logs
 - [ ] Changing `SCENARIO=fraud-approved` in test-client env produces APPROVED for both requests

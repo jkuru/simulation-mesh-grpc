@@ -11,13 +11,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 	"github.com/servicemesh/reference-app/internal/demo"
 	"github.com/servicemesh/reference-app/internal/env"
 )
 
 func main() {
-	endpoint := env.Get("PAYMENT_GATEWAY_ENDPOINT", "localhost:9001")
+	endpoint := env.Get("CHECKOUT_GATEWAY_ENDPOINT", "localhost:9001")
 	override := env.Get("SCENARIO", "")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -28,13 +28,13 @@ func main() {
 		grpc.WithBlock(),
 	)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "dial payment-gateway failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "dial checkout-gateway failed: %v\n", err)
 		os.Exit(1)
 	}
 	defer conn.Close()
 
-	// Adapter: generated client → demo.PaymentGateway port.
-	runner := demo.Runner{Gateway: demo.GRPCPaymentGateway{Client: paymentv1.NewPaymentGatewayClient(conn)}}
+	// Adapter: generated client → demo.CheckoutGateway port.
+	runner := demo.Runner{Gateway: demo.GRPCCheckoutGateway{Client: checkoutv1.NewCheckoutGatewayClient(conn)}}
 
 	cases := demo.DefaultCases()
 	checkVirtualization := override == ""

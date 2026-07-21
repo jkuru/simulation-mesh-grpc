@@ -9,7 +9,7 @@ metadata:
 data:
   LOG_LEVEL: "info"
 
-  # payment-gateway → fraud-checker
+  # checkout-gateway → fraud-checker
   FRAUD_CHECKER_ENDPOINT: "fraud-checker.poc.svc.cluster.local:9002"
 
   # fraud-checker — mesh mode: dial logical third-party host (ServiceEntry).

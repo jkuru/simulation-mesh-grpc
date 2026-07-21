@@ -23,5 +23,5 @@ spec:
           image: reference-app/test-client:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: PAYMENT_GATEWAY_ENDPOINT
-              value: payment-gateway.poc.svc.cluster.local:9001
+            - name: CHECKOUT_GATEWAY_ENDPOINT
+              value: checkout-gateway.poc.svc.cluster.local:9001

@@ -2,7 +2,7 @@
 # Start all POC services as local processes, run the test client, then tear down.
 #
 # System context (local mode):
-#   test-client → payment-gateway:9001 → fraud-checker:9002
+#   test-client → checkout-gateway:9001 → fraud-checker:9002
 #        no header  → external-risk:9003
 #        header set → microcks-mock:9090
 #
@@ -68,15 +68,15 @@ wait_port 9003
 wait_port 9090
 wait_port 9002
 
-start payment-gateway \
+start checkout-gateway \
   env GRPC_PORT=9001 \
       FRAUD_CHECKER_ENDPOINT=localhost:9002 \
-  "$BIN/payment-gateway"
+  "$BIN/checkout-gateway"
 
 wait_port 9001
 
 echo "==> running test-client"
 echo
-env PAYMENT_GATEWAY_ENDPOINT=localhost:9001 "$BIN/test-client"
+env CHECKOUT_GATEWAY_ENDPOINT=localhost:9001 "$BIN/test-client"
 echo
 echo "==> service logs: $LOGDIR"

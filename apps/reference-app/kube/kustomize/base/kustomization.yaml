@@ -7,5 +7,5 @@ namespace: poc
 
 resources:
   - namespace.yaml
-  - payment-gateway.yaml
+  - checkout-gateway.yaml
   - fraud-checker.yaml

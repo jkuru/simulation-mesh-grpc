@@ -30,7 +30,7 @@ Consumers must **not** copy hand-written VS/EnvoyFilter from `apps/reference-app
 
 | Name | Path | What it is |
 | --- | --- | --- |
-| **reference-app** | `apps/reference-app` | Sample payment system (the only demo application) |
+| **reference-app** | `apps/reference-app` | Toy NFT marketplace demo (the only sample application) |
 | **virtualization-framework** | `apps/virtualization-framework` | Installable platform product (operator + CRD) |
 | **reference-app-with-framework** | `examples/reference-app-with-framework` | How-to: run the reference app using the framework |
 | **virtualization-contract** | `packages/virtualization-contract` | Shared header/label/backend constants |
@@ -121,13 +121,13 @@ servicemesh/
 | No mesh | v3 | `make demo`, Compose, `SIMULATION_MODE=local` |
 | Mesh (manual) | v1 | `kube/`, Istio, `SIMULATION_MODE=mesh` |
 
-Owns: payment/fraud/risk demo services, local tests, teaching kube YAML.  
+Owns: checkout/fraud/risk demo services, local tests, teaching kube YAML.  
 Does not own: operator controller.
 
 ### 4.2 `apps/virtualization-framework`
 
 Owns: `SimulationManifest` CRD, operator, Helm chart, prod safety.  
-Does not own: payment business logic, local `make demo`.
+Does not own: marketplace business logic, local `make demo`.
 
 **Definition of done:** `examples/reference-app-with-framework` works without hand-applying `apps/reference-app/kube` teaching Istio resources.
 

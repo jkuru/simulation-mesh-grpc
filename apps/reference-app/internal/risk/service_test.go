@@ -26,9 +26,9 @@ func TestTokenPrefixScorer(t *testing.T) {
 		score int32
 		dec   string
 	}{
-		{"tok_low_risk_4242", 10, "APPROVE"},
-		{"tok_high_risk_9999", 85, "DECLINE"},
-		{"tok_other", 20, "APPROVE"},
+		{"nft_low_risk_4242", 10, "APPROVE"},
+		{"nft_high_risk_9999", 85, "DECLINE"},
+		{"nft_other", 20, "APPROVE"},
 	}
 	for _, tc := range cases {
 		got := s.Score(tc.token)
@@ -36,7 +36,7 @@ func TestTokenPrefixScorer(t *testing.T) {
 			t.Fatalf("%s: %+v", tc.token, got)
 		}
 	}
-	hi := s.Score("tok_high_risk_x")
+	hi := s.Score("nft_high_risk_x")
 	if len(hi.Factors) != 1 || hi.Factors[0] != "HIGH_RISK_TOKEN" {
 		t.Fatalf("factors: %+v", hi.Factors)
 	}
@@ -45,7 +45,7 @@ func TestTokenPrefixScorer(t *testing.T) {
 func TestExternalService_EvaluateRisk(t *testing.T) {
 	svc := risk.NewExternalService(silent(), nil)
 	resp, err := svc.EvaluateRisk(context.Background(), &riskv1.RiskRequest{
-		CardToken: "tok_low_risk_1", AmountCents: 50,
+		NftToken: "nft_low_risk_1", AmountCents: 50,
 	})
 	if err != nil || resp.RiskScore != 10 || resp.Decision != "APPROVE" {
 		t.Fatalf("%+v %v", resp, err)
@@ -55,7 +55,7 @@ func TestExternalService_EvaluateRisk(t *testing.T) {
 func TestVirtualService_KnownScenario(t *testing.T) {
 	svc := risk.NewVirtualService(silent(), nil)
 	ctx := sim.WithScenario(context.Background(), risk.ScenarioFraudDeclined)
-	resp, err := svc.EvaluateRisk(ctx, &riskv1.RiskRequest{CardToken: "tok_low_risk_1"})
+	resp, err := svc.EvaluateRisk(ctx, &riskv1.RiskRequest{NftToken: "nft_low_risk_1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestMapScenarioStore_Lookup(t *testing.T) {
 func TestGRPCServer_Delegates(t *testing.T) {
 	svc := risk.NewExternalService(nil, risk.TokenPrefixScorer{})
 	srv := &risk.GRPCServer{Handler: svc}
-	resp, err := srv.EvaluateRisk(context.Background(), &riskv1.RiskRequest{CardToken: "tok_high_risk_1"})
+	resp, err := srv.EvaluateRisk(context.Background(), &riskv1.RiskRequest{NftToken: "nft_high_risk_1"})
 	if err != nil || resp.GetRiskScore() != 85 {
 		t.Fatalf("%+v %v", resp, err)
 	}
@@ -139,7 +139,7 @@ func TestNewVirtualService_NilDefaults(t *testing.T) {
 
 func TestNewExternalService_NilDefaults(t *testing.T) {
 	svc := risk.NewExternalService(nil, nil)
-	resp, err := svc.EvaluateRisk(context.Background(), &riskv1.RiskRequest{CardToken: "tok_low_risk_x"})
+	resp, err := svc.EvaluateRisk(context.Background(), &riskv1.RiskRequest{NftToken: "nft_low_risk_x"})
 	if err != nil || resp.GetRiskScore() != 10 {
 		t.Fatalf("%+v %v", resp, err)
 	}

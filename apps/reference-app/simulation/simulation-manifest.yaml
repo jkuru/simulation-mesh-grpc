@@ -23,7 +23,7 @@ spec:
           rpc EvaluateRisk (RiskRequest) returns (RiskResponse);
         }
         message RiskRequest {
-          string card_token   = 1;
+          string nft_token   = 1;
           int64  amount_cents = 2;
         }
         message RiskResponse {

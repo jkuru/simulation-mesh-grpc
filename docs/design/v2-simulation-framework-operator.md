@@ -157,7 +157,7 @@ spec:
         service FraudEvaluator {
           rpc Evaluate (EvaluateRequest) returns (EvaluateResponse);
         }
-        message EvaluateRequest  { string card_token = 1; int64 amount = 2; }
+        message EvaluateRequest  { string nft_token = 1; int64 amount = 2; }
         message EvaluateResponse { int32 risk_score = 1; string decision = 2; }
 
     - name: card-network

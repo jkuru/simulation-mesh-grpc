@@ -32,12 +32,12 @@ func (s *VirtualService) EvaluateRisk(ctx context.Context, req *riskv1.RiskReque
 	name := ScenarioNameFromContext(ctx)
 	sc, ok := s.store.Lookup(name)
 	if !ok {
-		s.log.Warn("unknown scenario", "scenario", name, "card", req.GetCardToken())
+		s.log.Warn("unknown scenario", "scenario", name, "card", req.GetNftToken())
 		return nil, status.Errorf(codes.NotFound, "unknown scenario %q", name)
 	}
 	s.log.Info("serving scenario",
 		"scenario", name,
-		"card", req.GetCardToken(),
+		"card", req.GetNftToken(),
 		"score", sc.Score,
 		"decision", sc.Decision,
 	)

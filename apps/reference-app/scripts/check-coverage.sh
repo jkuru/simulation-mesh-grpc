@@ -12,7 +12,7 @@ OUT="${TMPDIR:-/tmp}/reference-app-coverage.out"
 PKGS=(
   ./internal/sim
   ./internal/env
-  ./internal/payment
+  ./internal/checkout
   ./internal/fraud
   ./internal/risk
   ./internal/demo

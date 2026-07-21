@@ -5,16 +5,16 @@ import (
 
 	"google.golang.org/grpc"
 
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 )
 
-// GRPCPaymentGateway adapts paymentv1.PaymentGatewayClient to PaymentGateway.
-type GRPCPaymentGateway struct {
-	Client paymentv1.PaymentGatewayClient
+// GRPCCheckoutGateway adapts checkoutv1.CheckoutGatewayClient to CheckoutGateway.
+type GRPCCheckoutGateway struct {
+	Client checkoutv1.CheckoutGatewayClient
 	Opts   []grpc.CallOption
 }
 
-// ProcessPayment implements PaymentGateway.
-func (c GRPCPaymentGateway) ProcessPayment(ctx context.Context, req *paymentv1.PaymentRequest) (*paymentv1.PaymentResponse, error) {
-	return c.Client.ProcessPayment(ctx, req, c.Opts...)
+// ProcessCheckout implements CheckoutGateway.
+func (c GRPCCheckoutGateway) ProcessCheckout(ctx context.Context, req *checkoutv1.CheckoutRequest) (*checkoutv1.CheckoutResponse, error) {
+	return c.Client.ProcessCheckout(ctx, req, c.Opts...)
 }

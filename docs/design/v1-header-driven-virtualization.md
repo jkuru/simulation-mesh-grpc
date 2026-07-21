@@ -57,7 +57,7 @@ See also: monorepo map [`docs/MONOREPO.md`](../MONOREPO.md) (option B naming).
 
 This document describes **header-driven service virtualization for
 reference-app when it runs on an Istio service mesh**. It is the mesh-mode design
-for the same gRPC services introduced in v3 (payment-gateway → fraud-checker →
+for the same gRPC services introduced in v3 (checkout-gateway → fraud-checker →
 external risk). Test callers exercise real internal services while the mesh
 substitutes controlled virtual responses for outbound third-party gRPC calls—without
 changing service business logic or shipping environment-specific binaries.

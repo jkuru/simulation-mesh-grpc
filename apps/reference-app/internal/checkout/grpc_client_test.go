@@ -1,4 +1,4 @@
-package payment_test
+package checkout_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	fraudv1 "github.com/servicemesh/reference-app/gen/fraud/v1"
-	"github.com/servicemesh/reference-app/internal/payment"
+	"github.com/servicemesh/reference-app/internal/checkout"
 )
 
 type stubFraudClient struct {
@@ -23,7 +23,7 @@ func (s *stubFraudClient) CheckFraud(ctx context.Context, in *fraudv1.FraudCheck
 
 func TestGRPCFraudChecker_Adapter(t *testing.T) {
 	stub := &stubFraudClient{resp: &fraudv1.FraudCheckResponse{Recommendation: "APPROVE"}}
-	adapter := payment.GRPCFraudChecker{Client: stub, Opts: []grpc.CallOption{grpc.WaitForReady(true)}}
+	adapter := checkout.GRPCFraudChecker{Client: stub, Opts: []grpc.CallOption{grpc.WaitForReady(true)}}
 	resp, err := adapter.CheckFraud(context.Background(), &fraudv1.FraudCheckRequest{TransactionId: "t"})
 	if err != nil || resp.Recommendation != "APPROVE" || stub.opts != 1 {
 		t.Fatalf("resp=%+v err=%v opts=%d", resp, err, stub.opts)

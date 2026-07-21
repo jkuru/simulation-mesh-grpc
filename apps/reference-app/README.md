@@ -1,6 +1,9 @@
 # reference-app
 
-**Sample payment application** for the monorepo (option B naming).
+**Toy NFT marketplace application** for the monorepo (option B naming).
+
+> **Demo domain only.** Fictional NFT checkout → fraud → external risk.  
+> **Not** banking/card systems. No real financial or card data.
 
 | Mode | Design | How |
 | --- | --- | --- |
@@ -21,16 +24,16 @@ Related projects:
 ## What it proves
 
 ```
-Same card. Same amount. Different outcome — only:
+Same NFT. Same price. Different outcome — only:
   test-data-simulation-action-name: fraud-declined
 ```
 
 | Hop | Role | Port |
 | --- | --- | --- |
-| `test-client` | Two concurrent payments | — |
-| `payment-gateway` | Service A | 9001 |
+| `test-client` | Two concurrent checkouts | — |
+| `checkout-gateway` | Service A (marketplace checkout) | 9001 |
 | `fraud-checker` | Service B | 9002 |
-| `external-risk` | Third-party stand-in | 9003 |
+| `external-risk` | Third-party stand-in (virtualized) | 9003 |
 | `microcks-mock` | Scenario backend | 9090 |
 
 ## Quick start (no mesh — v3)
@@ -67,7 +70,7 @@ App uses `SIMULATION_MODE=mesh`; Istio VirtualService virtualizes `external-risk
 ```
 reference-app/
 ├── cmd/                 composition roots
-├── internal/            payment, fraud, risk, demo, sim
+├── internal/            checkout, fraud, risk, demo, sim
 ├── proto/ gen/
 ├── docker-compose.yml   no mesh
 ├── kube/                mesh teaching manifests

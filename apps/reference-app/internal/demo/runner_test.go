@@ -8,20 +8,20 @@ import (
 	"testing"
 	"time"
 
-	paymentv1 "github.com/servicemesh/reference-app/gen/payment/v1"
+	checkoutv1 "github.com/servicemesh/reference-app/gen/checkout/v1"
 	"github.com/servicemesh/reference-app/internal/demo"
 	"github.com/servicemesh/reference-app/internal/sim"
 )
 
 type fakeGateway struct {
 	// byScenario maps scenario ("" for none) → response
-	byScenario map[string]*paymentv1.PaymentResponse
+	byScenario map[string]*checkoutv1.CheckoutResponse
 	err        error
 	// seen records scenarios observed
 	seen []string
 }
 
-func (f *fakeGateway) ProcessPayment(ctx context.Context, req *paymentv1.PaymentRequest) (*paymentv1.PaymentResponse, error) {
+func (f *fakeGateway) ProcessCheckout(ctx context.Context, req *checkoutv1.CheckoutRequest) (*checkoutv1.CheckoutResponse, error) {
 	sc := sim.ScenarioFromContext(ctx)
 	f.seen = append(f.seen, sc)
 	if f.err != nil {
@@ -30,7 +30,7 @@ func (f *fakeGateway) ProcessPayment(ctx context.Context, req *paymentv1.Payment
 	if resp, ok := f.byScenario[sc]; ok {
 		return resp, nil
 	}
-	return &paymentv1.PaymentResponse{Status: "APPROVED", TransactionId: req.TransactionId}, nil
+	return &checkoutv1.CheckoutResponse{Status: "APPROVED", TransactionId: req.TransactionId}, nil
 }
 
 func TestDefaultAndOverrideCases(t *testing.T) {
@@ -45,8 +45,8 @@ func TestDefaultAndOverrideCases(t *testing.T) {
 }
 
 func TestRunner_VirtualizationConfirmed(t *testing.T) {
-	gw := &fakeGateway{byScenario: map[string]*paymentv1.PaymentResponse{
-		"":               {Status: "APPROVED", AuthCode: "A", RiskScore: 10, Recommendation: "APPROVE"},
+	gw := &fakeGateway{byScenario: map[string]*checkoutv1.CheckoutResponse{
+		"":               {Status: "APPROVED", OrderCode: "A", RiskScore: 10, Recommendation: "APPROVE"},
 		"fraud-declined": {Status: "DECLINED", DeclineReason: "HIGH_RISK_SCORE", RiskScore: 92, Recommendation: "DECLINE"},
 	}}
 	r := demo.Runner{Gateway: gw}
@@ -85,14 +85,14 @@ func TestFormatReport_Success(t *testing.T) {
 	results := []demo.Result{
 		{
 			Case: demo.Case{Label: "Real path", Txn: "t1"},
-			Resp: &paymentv1.PaymentResponse{
-				Status: "APPROVED", AuthCode: "AUTH-1", RiskScore: 10, Recommendation: "APPROVE",
+			Resp: &checkoutv1.CheckoutResponse{
+				Status: "APPROVED", OrderCode: "ORDER-1", RiskScore: 10, Recommendation: "APPROVE",
 			},
 			Elapsed: int64(5 * time.Millisecond),
 		},
 		{
 			Case: demo.Case{Label: "Sim", Scenario: "fraud-declined", Txn: "t2"},
-			Resp: &paymentv1.PaymentResponse{
+			Resp: &checkoutv1.CheckoutResponse{
 				Status: "DECLINED", DeclineReason: "HIGH_RISK_SCORE", RiskScore: 92, Recommendation: "DECLINE",
 			},
 			Elapsed: int64(7 * time.Millisecond),
@@ -119,7 +119,7 @@ func TestFormatReport_Success(t *testing.T) {
 func TestFormatReport_FailureAndError(t *testing.T) {
 	results := []demo.Result{
 		{Case: demo.Case{Label: "a"}, Err: errors.New("fail")},
-		{Case: demo.Case{Label: "b"}, Resp: &paymentv1.PaymentResponse{Status: "APPROVED"}},
+		{Case: demo.Case{Label: "b"}, Resp: &checkoutv1.CheckoutResponse{Status: "APPROVED"}},
 	}
 	var buf bytes.Buffer
 	if err := demo.FormatReport(&buf, "ep", results, true); err != nil {
@@ -136,12 +136,13 @@ func TestFormatReport_FailureAndError(t *testing.T) {
 func TestFormatReport_NoCheck(t *testing.T) {
 	var buf bytes.Buffer
 	err := demo.FormatReport(&buf, "ep", []demo.Result{
-		{Case: demo.Case{Label: "x"}, Resp: &paymentv1.PaymentResponse{Status: "APPROVED", AuthCode: "Z"}},
+		{Case: demo.Case{Label: "x"}, Resp: &checkoutv1.CheckoutResponse{Status: "APPROVED", OrderCode: "Z"}},
 	}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(buf.String(), "Virtualization") {
+	if strings.Contains(buf.String(), "Virtualization confirmed") ||
+		strings.Contains(buf.String(), "NOT confirmed") {
 		t.Fatal("should not check")
 	}
 }
@@ -152,7 +153,7 @@ func TestRunner_CustomNow(t *testing.T) {
 		time.Unix(0, 0), time.Unix(0, int64(3*time.Millisecond)),
 		time.Unix(0, 0), time.Unix(0, int64(4*time.Millisecond)),
 	}
-	gw := &fakeGateway{byScenario: map[string]*paymentv1.PaymentResponse{
+	gw := &fakeGateway{byScenario: map[string]*checkoutv1.CheckoutResponse{
 		"":               {Status: "APPROVED"},
 		"fraud-declined": {Status: "DECLINED"},
 	}}

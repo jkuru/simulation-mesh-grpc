@@ -10,7 +10,7 @@ service FraudChecker {
 
 message FraudCheckRequest {
   string transaction_id = 1;
-  string card_token     = 2;
+  string nft_token      = 2;
   int64  amount_cents   = 3;
 }
 
