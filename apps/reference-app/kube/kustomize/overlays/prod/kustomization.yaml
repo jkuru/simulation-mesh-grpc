@@ -1,0 +1,9 @@
+# Prod overlay: structural safety only.
+# Never installs VirtualService routes to Microcks. Only strips the simulation
+# header at the mesh ingress so even a malicious/misconfigured client cannot
+# activate virtualization in production.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - envoyfilter-strip-header.yaml

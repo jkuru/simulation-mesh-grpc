@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-checker
+  namespace: poc
+  labels:
+    app: fraud-checker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fraud-checker
+  template:
+    metadata:
+      labels:
+        app: fraud-checker
+        simulation.io/propagation: enabled
+      annotations:
+        # Resolve ServiceEntry hosts (external-risk-api.com) via Istio DNS.
+        proxy.istio.io/config: |
+          proxyMetadata:
+            ISTIO_META_DNS_CAPTURE: "true"
+            ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+    spec:
+      containers:
+        - name: fraud-checker
+          image: reference-app/fraud-checker:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9002
+              name: grpc
+          env:
+            - name: GRPC_PORT
+              value: "9002"
+          envFrom:
+            - configMapRef:
+                name: poc-config
+          readinessProbe:
+            tcpSocket:
+              port: grpc
+            initialDelaySeconds: 8
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-checker
+  namespace: poc
+  labels:
+    app: fraud-checker
+spec:
+  selector:
+    app: fraud-checker
+  ports:
+    - name: grpc
+      port: 9002
+      targetPort: grpc
+      appProtocol: grpc

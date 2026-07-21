@@ -1,0 +1,11 @@
+# Install virtualization-framework (CRD + RBAC + operator).
+#   kubectl apply -k config/default
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../manager/namespace.yaml
+  - ../crd/simulation.io_simulationmanifests.yaml
+  - ../manager/serviceaccount.yaml
+  - ../rbac/role.yaml
+  - ../manager/deployment.yaml

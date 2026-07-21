@@ -1,0 +1,40 @@
+# Layer 2 (sidecar): re-inject simulation header on outbound requests.
+# Pairs with envoyfilter-inbound-capture.yaml.
+#
+# Note: Lua filterState CONNECTION APIs vary by Envoy version. This teaching
+# filter uses dynamic metadata as a portable stand-in; production operator
+# images pin an Istio/Envoy version and use the filter-state API from v1 §7.2.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: poc-outbound-inject
+  namespace: poc
+spec:
+  workloadSelector:
+    labels:
+      simulation.io/propagation: "enabled"
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.lua
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inlineCode: |
+              local HEADER    = "test-data-simulation-action-name"
+              local STATE_KEY = "test.simulation.action.name"
+
+              function envoy_on_request(request_handle)
+                local meta = request_handle:streamInfo():dynamicMetadata():get(
+                  "envoy.filters.http.lua")
+                if meta ~= nil and meta[STATE_KEY] ~= nil then
+                  request_handle:headers():replace(HEADER, meta[STATE_KEY])
+                end
+              end

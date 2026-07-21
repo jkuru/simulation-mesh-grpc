@@ -1,0 +1,11 @@
+# Base: mesh services only — no simulation-specific routing.
+# Production-shaped Deployments; simulation overlays add Istio resources.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: poc
+
+resources:
+  - namespace.yaml
+  - payment-gateway.yaml
+  - fraud-checker.yaml

@@ -1,0 +1,22 @@
+# Example: grant app-team editors access to SimulationManifest in namespace "poc".
+# Not applied by default install — copy and change subjects for your team.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: simulation-app-team-editor
+  namespace: poc
+  labels:
+    app.kubernetes.io/name: virtualization-framework
+    simulation.io/rbac-persona: app-team
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: simulation-app-team-editor
+subjects:
+  # Replace with your team Group or ServiceAccount.
+  - kind: Group
+    name: poc-developers
+    apiGroup: rbac.authorization.k8s.io
+  # - kind: ServiceAccount
+  #   name: deploy
+  #   namespace: poc

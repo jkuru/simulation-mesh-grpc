@@ -1,0 +1,46 @@
+# Example SimulationManifest (v2 CRD).
+#
+# With the Simulation Framework operator installed, applying this single
+# resource generates EnvoyFilters, VirtualService, DestinationRule, ServiceEntry,
+# and Microcks configuration. The POC instead keeps those resources as
+# hand-written YAML under kube/kustomize/overlays/dev so they are readable.
+#
+# apiVersion / kind match docs/design/v2-simulation-framework-operator.md.
+apiVersion: simulation.io/v1alpha1
+kind: SimulationManifest
+metadata:
+  name: poc-simulation
+  namespace: poc
+spec:
+  thirdParties:
+    - name: external-risk
+      host: external-risk-api.com
+      port: 443
+      proto: |
+        syntax = "proto3";
+        package risk.v1;
+        service RiskService {
+          rpc EvaluateRisk (RiskRequest) returns (RiskResponse);
+        }
+        message RiskRequest {
+          string card_token   = 1;
+          int64  amount_cents = 2;
+        }
+        message RiskResponse {
+          int32           risk_score   = 1;
+          string          decision     = 2;
+          repeated string risk_factors = 3;
+        }
+
+  scenarios:
+    - name: fraud-approved
+      responses:
+        external-risk:
+          - operation: EvaluateRisk
+            body: '{ "risk_score": 5, "decision": "APPROVE", "risk_factors": [] }'
+
+    - name: fraud-declined
+      responses:
+        external-risk:
+          - operation: EvaluateRisk
+            body: '{ "risk_score": 92, "decision": "DECLINE", "risk_factors": ["VELOCITY_BREACH", "HIGH_AMOUNT"] }'

@@ -1,0 +1,13 @@
+virtualization-framework installed.
+
+1. Ensure Istio is installed and Microcks (or microcks-mock) is reachable at:
+   {{ .Values.microcksService }}
+
+2. Apply a SimulationManifest, e.g.:
+   kubectl apply -f config/samples/simulationmanifest_reference_app.yaml
+
+3. Label workloads:
+   kubectl label deploy/<name> simulation.io/propagation=enabled -n <ns>
+
+4. Check status:
+   kubectl get simm -A

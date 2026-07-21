@@ -1,0 +1,21 @@
+# App-team persona: author SimulationManifest CRs in their namespaces.
+# Bind with a RoleBinding (namespace-scoped) — see samples/app-team-rolebinding-example.yaml.
+# Intentionally NO Istio write, NO operator install, NO CRD verbs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: simulation-app-team-editor
+  labels:
+    app.kubernetes.io/name: virtualization-framework
+    simulation.io/rbac-persona: app-team
+rules:
+  - apiGroups: ["simulation.io"]
+    resources: ["simulationmanifests"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["simulation.io"]
+    resources: ["simulationmanifests/status"]
+    verbs: ["get"]
+  # Read-only visibility into what the operator generated (optional but good DX).
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices", "serviceentries", "destinationrules", "envoyfilters"]
+    verbs: ["get", "list", "watch"]

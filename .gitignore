@@ -1,0 +1,11 @@
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+
+# Go / POC build outputs (also ignored under apps/*)
+**/bin/
+**/gen/
+**/coverage.out
+**/vendor/

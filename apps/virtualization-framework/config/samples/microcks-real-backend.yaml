@@ -1,0 +1,48 @@
+# Skeleton: Service shape for a real Microcks (or compatible) virtual backend.
+# Deploy actual Microcks via upstream Helm/operator — not vendored here.
+#
+# Requirements for virtualBackend: microcks
+#   - Pods labeled app=microcks (rewrite EnvoyFilter selector)
+#   - Service DNS reachable as microcksService host:port
+#   - Examples loaded for scenario names used in SimulationManifest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microcks-svc
+  namespace: simulation-system
+  labels:
+    app: microcks
+    simulation.io/backend: microcks
+  annotations:
+    simulation.io/note: "Replace with real Microcks Service; teaching path uses microcks-mock Deployment"
+spec:
+  selector:
+    app: microcks
+  ports:
+    - name: grpc
+      port: 9090
+      targetPort: 9090
+      appProtocol: grpc
+---
+# Example SimulationManifest targeting real Microcks strategy.
+apiVersion: simulation.io/v1alpha1
+kind: SimulationManifest
+metadata:
+  name: reference-app-with-microcks
+  namespace: poc
+spec:
+  virtualBackend: microcks
+  microcksService: microcks-svc.simulation-system.svc.cluster.local:9090
+  thirdParties:
+    - name: external-risk
+      host: external-risk-api.com
+      port: 9003
+      backendHost: external-risk.poc.svc.cluster.local
+      backendPort: 9003
+  scenarios:
+    - name: fraud-declined
+      responses:
+        external-risk:
+          - operation: EvaluateRisk
+            body: '{"risk_score":92,"decision":"DECLINE","risk_factors":["VELOCITY_BREACH"]}'

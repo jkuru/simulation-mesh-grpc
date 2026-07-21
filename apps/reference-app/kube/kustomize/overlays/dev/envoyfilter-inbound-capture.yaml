@@ -1,0 +1,39 @@
+# Layer 2 (sidecar): capture simulation header into Envoy filter state so the
+# outbound inject filter can re-attach it on every egress call from this pod.
+#
+# This replaces the need for the Go ServerInterceptor in pure mesh mode.
+# CONNECTION scope: see v1 design §7.2.5 (test traffic should use dedicated pools).
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: poc-inbound-capture
+  namespace: poc
+spec:
+  workloadSelector:
+    labels:
+      simulation.io/propagation: "enabled"
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.lua
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inlineCode: |
+              local HEADER    = "test-data-simulation-action-name"
+              local STATE_KEY = "test.simulation.action.name"
+
+              function envoy_on_request(request_handle)
+                local scenario = request_handle:headers():get(HEADER)
+                if scenario ~= nil and scenario ~= "" then
+                  request_handle:streamInfo():dynamicMetadata():set(
+                    "envoy.filters.http.lua", STATE_KEY, scenario)
+                end
+              end

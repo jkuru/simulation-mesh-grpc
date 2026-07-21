@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: simulation-system
+  labels:
+    app.kubernetes.io/name: virtualization-framework
+    # Pod Security: enforce baseline (shared ns hosts teaching microcks-mock too).
+    # Operator Deployment itself uses restricted-compatible securityContext.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

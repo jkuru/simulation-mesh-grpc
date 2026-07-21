@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: virtualization-framework-webhook
+  namespace: simulation-system
+  labels:
+    app: virtualization-framework
+    app.kubernetes.io/name: virtualization-framework
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: webhook
+      protocol: TCP
+  selector:
+    app: virtualization-framework

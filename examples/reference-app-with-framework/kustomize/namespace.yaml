@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: poc
+  labels:
+    istio-injection: enabled
+    app.kubernetes.io/part-of: reference-app-with-framework
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: simulation-system
+  labels:
+    istio-injection: enabled
+    app.kubernetes.io/part-of: reference-app-with-framework

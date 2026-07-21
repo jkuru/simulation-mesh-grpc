@@ -1,0 +1,11 @@
+# Scenario fixture — mirrors microcks-mock "fraud-declined" and SimulationManifest.
+name: fraud-declined
+service: RiskService
+version: v1
+operation: EvaluateRisk
+response:
+  risk_score: 92
+  decision: DECLINE
+  risk_factors:
+    - VELOCITY_BREACH
+    - HIGH_AMOUNT

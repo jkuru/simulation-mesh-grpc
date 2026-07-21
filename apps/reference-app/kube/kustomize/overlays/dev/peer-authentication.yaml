@@ -1,0 +1,19 @@
+# Teaching cluster: allow plaintext between sidecars and apps (PERMISSIVE).
+# Production typically uses STRICT mTLS — not required for the reference demo.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: poc
+spec:
+  mtls:
+    mode: PERMISSIVE
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: simulation-system
+spec:
+  mtls:
+    mode: PERMISSIVE

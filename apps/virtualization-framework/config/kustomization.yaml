@@ -1,0 +1,16 @@
+# Install virtualization-framework (CRD + RBAC matrix + operator + webhook Service).
+# Prefer: make install  (generates webhook TLS + ValidatingWebhookConfiguration)
+#   kubectl apply -k config/  alone is incomplete without the cert secret + CA bundle.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - manager/namespace.yaml
+  - crd/simulation.io_simulationmanifests.yaml
+  - manager/serviceaccount.yaml
+  - rbac/role.yaml
+  - rbac/app_team_editor.yaml
+  - rbac/platform_admin.yaml
+  - manager/deployment.yaml
+  - webhook/service.yaml
+  - networkpolicy/operator.yaml

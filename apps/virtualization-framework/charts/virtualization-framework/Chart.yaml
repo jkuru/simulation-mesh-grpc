@@ -1,0 +1,6 @@
+apiVersion: v2
+name: virtualization-framework
+description: Header-driven service virtualization operator (SimulationManifest)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

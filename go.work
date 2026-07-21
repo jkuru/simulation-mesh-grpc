@@ -1,0 +1,7 @@
+go 1.26.5
+
+use (
+	./apps/reference-app
+	./apps/virtualization-framework
+	./packages/virtualization-contract
+)

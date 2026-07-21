@@ -1,0 +1,56 @@
+# Dev mesh overlay — reference-app on Istio (design v1).
+#
+# Apply:
+#   make deploy-dev
+#   # or: kubectl apply -k kube/kustomize/overlays/dev
+#
+# Prerequisites: Istio installed; images loaded (make build-images + kind load).
+# Full e2e: make mesh-e2e
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - configmap.yaml
+  - external-risk.yaml
+  - microcks.yaml
+  - service-entry-external-risk.yaml
+  - virtual-service-external-risk.yaml
+  - destination-rule-microcks.yaml
+  - destination-rule-external-risk.yaml
+  - peer-authentication.yaml
+  # EnvoyFilters demonstrate mesh-native header prop (teaching). App interceptors
+  # also propagate headers so VirtualService still works if Lua filters differ by Istio version.
+  - envoyfilter-inbound-capture.yaml
+  - envoyfilter-outbound-inject.yaml
+  - envoyfilter-microcks-rewrite.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: payment-gateway
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/simulation.io~1propagation
+        value: enabled
+      - op: replace
+        path: /spec/template/spec/containers/0/readinessProbe/initialDelaySeconds
+        value: 8
+  - target:
+      kind: Deployment
+      name: fraud-checker
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/simulation.io~1propagation
+        value: enabled
+      - op: add
+        path: /spec/template/metadata/annotations
+        value:
+          # Resolve ServiceEntry hosts (external-risk-api.com) inside the pod via Istio DNS.
+          proxy.istio.io/config: |
+            proxyMetadata:
+              ISTIO_META_DNS_CAPTURE: "true"
+              ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+      - op: replace
+        path: /spec/template/spec/containers/0/readinessProbe/initialDelaySeconds
+        value: 8

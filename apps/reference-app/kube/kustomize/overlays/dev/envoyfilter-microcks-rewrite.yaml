@@ -1,0 +1,34 @@
+# On the virtual backend: rewrite simulation header → x-microcks-operation.
+# Real Microcks selects examples by that header; microcks-mock accepts both.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: microcks-scenario-rewrite
+  namespace: simulation-system
+spec:
+  workloadSelector:
+    labels:
+      app: microcks
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.lua
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inlineCode: |
+              function envoy_on_request(request_handle)
+                local scenario = request_handle:headers():get(
+                  "test-data-simulation-action-name")
+                if scenario ~= nil and scenario ~= "" then
+                  request_handle:headers():replace(
+                    "x-microcks-operation", scenario)
+                end
+              end

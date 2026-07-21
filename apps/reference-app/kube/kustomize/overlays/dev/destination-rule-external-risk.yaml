@@ -1,0 +1,14 @@
+# Plaintext to the logical third-party host (ServiceEntry → in-cluster stand-in).
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: external-risk-api
+  namespace: poc
+spec:
+  host: external-risk-api.com
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+    connectionPool:
+      http:
+        h2UpgradePolicy: UPGRADE

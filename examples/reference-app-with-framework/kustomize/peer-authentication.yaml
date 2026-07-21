@@ -1,0 +1,18 @@
+# Teaching: allow plaintext between sidecars and apps.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: poc
+spec:
+  mtls:
+    mode: PERMISSIVE
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: simulation-system
+spec:
+  mtls:
+    mode: PERMISSIVE

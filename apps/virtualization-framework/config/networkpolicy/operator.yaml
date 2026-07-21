@@ -1,0 +1,45 @@
+# Lock down the operator: only webhook + probes + metrics; egress for API + DNS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: virtualization-framework
+  namespace: simulation-system
+  labels:
+    app.kubernetes.io/name: virtualization-framework
+spec:
+  podSelector:
+    matchLabels:
+      app: virtualization-framework
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Admission webhooks (kube-apiserver → operator :9443)
+    - ports:
+        - protocol: TCP
+          port: 9443
+    # Health probes (kubelet) + optional metrics scrape
+    - ports:
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8080
+  egress:
+    # DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Kubernetes API (kind/control-plane uses varying IPs — allow HTTPS broadly)
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+    # Istio / in-cluster HTTPS alternatives (optional control plane ports)
+    - ports:
+        - protocol: TCP
+          port: 15012
+        - protocol: TCP
+          port: 15017

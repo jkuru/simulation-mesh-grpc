@@ -1,0 +1,22 @@
+// fraud.v1 — Service B (fraud-checker) internal API.
+// Real mesh service; its *outbound* RiskService call is the virtualization point.
+syntax = "proto3";
+package fraud.v1;
+option go_package = "github.com/servicemesh/reference-app/gen/fraud/v1;fraudv1";
+
+service FraudChecker {
+  rpc CheckFraud (FraudCheckRequest) returns (FraudCheckResponse);
+}
+
+message FraudCheckRequest {
+  string transaction_id = 1;
+  string card_token     = 2;
+  int64  amount_cents   = 3;
+}
+
+message FraudCheckResponse {
+  string transaction_id = 1;
+  string recommendation = 2; // APPROVE | DECLINE
+  int32  risk_score     = 3;
+  string reason         = 4;
+}

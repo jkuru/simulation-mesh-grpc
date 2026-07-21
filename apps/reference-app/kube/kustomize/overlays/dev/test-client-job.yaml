@@ -1,0 +1,27 @@
+# One-shot proof job for mesh mode (applied by mesh-e2e script).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: reference-app-mesh-test
+  namespace: poc
+  labels:
+    app: test-client
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: test-client
+      annotations:
+        # Job does not need a long-lived sidecar for a single client process.
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test-client
+          image: reference-app/test-client:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PAYMENT_GATEWAY_ENDPOINT
+              value: payment-gateway.poc.svc.cluster.local:9001

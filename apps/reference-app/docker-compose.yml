@@ -1,0 +1,57 @@
+# Local full stack — SIMULATION_MODE=local on fraud-checker.
+#
+# Prerequisite: make build-images  (packages host binaries into images)
+#
+# Topology:
+#   test-client → payment-gateway:9001 → fraud-checker:9002
+#        no header  → external-risk:9003
+#        header set → microcks-mock:9090
+#
+# Usage:
+#   make build-images && make up && make test && make down
+services:
+  external-risk:
+    image: reference-app/external-risk:latest
+    environment:
+      GRPC_PORT: "9003"
+    ports:
+      - "9003:9003"
+
+  microcks-mock:
+    image: reference-app/microcks-mock:latest
+    environment:
+      GRPC_PORT: "9090"
+    ports:
+      - "9090:9090"
+
+  fraud-checker:
+    image: reference-app/fraud-checker:latest
+    environment:
+      GRPC_PORT: "9002"
+      SIMULATION_MODE: local
+      EXTERNAL_RISK_ENDPOINT: external-risk:9003
+      MICROCKS_ENDPOINT: microcks-mock:9090
+    ports:
+      - "9002:9002"
+    depends_on:
+      - external-risk
+      - microcks-mock
+
+  payment-gateway:
+    image: reference-app/payment-gateway:latest
+    environment:
+      GRPC_PORT: "9001"
+      FRAUD_CHECKER_ENDPOINT: fraud-checker:9002
+    ports:
+      - "9001:9001"
+    depends_on:
+      - fraud-checker
+
+  test-client:
+    image: reference-app/test-client:latest
+    environment:
+      PAYMENT_GATEWAY_ENDPOINT: payment-gateway:9001
+    depends_on:
+      - payment-gateway
+    profiles:
+      - test

@@ -1,0 +1,10 @@
+# Scenario fixture — mirrors microcks-mock "fraud-approved" and SimulationManifest.
+# In real Microcks this would be loaded via Admin API / artifact import.
+name: fraud-approved
+service: RiskService
+version: v1
+operation: EvaluateRisk
+response:
+  risk_score: 5
+  decision: APPROVE
+  risk_factors: []

@@ -1,0 +1,7 @@
+environment: dev
+image:
+  repository: virtualization-framework
+  tag: latest
+  pullPolicy: IfNotPresent
+systemNamespace: simulation-system
+microcksService: microcks-svc.simulation-system.svc.cluster.local:9090

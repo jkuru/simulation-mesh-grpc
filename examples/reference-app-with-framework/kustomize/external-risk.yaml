@@ -1,0 +1,44 @@
+# In-cluster stand-in for the real third party (teaching). Not Istio routing.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-risk
+  namespace: poc
+  labels:
+    app: external-risk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-risk
+  template:
+    metadata:
+      labels:
+        app: external-risk
+    spec:
+      containers:
+        - name: external-risk
+          image: reference-app/external-risk:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9003
+              name: grpc
+          env:
+            - name: GRPC_PORT
+              value: "9003"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-risk
+  namespace: poc
+  labels:
+    app: external-risk
+spec:
+  selector:
+    app: external-risk
+  ports:
+    - name: grpc
+      port: 9003
+      targetPort: grpc
+      appProtocol: grpc

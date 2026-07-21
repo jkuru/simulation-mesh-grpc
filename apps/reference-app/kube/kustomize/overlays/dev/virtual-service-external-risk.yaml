@@ -1,0 +1,31 @@
+# Mesh virtualization: third-party host only.
+#
+#   header present  → microcks (virtual backend)
+#   header absent   → real stand-in (external-risk via ServiceEntry)
+#
+# App code always dials external-risk-api.com:9003 when SIMULATION_MODE=mesh.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: external-risk-simulation
+  namespace: poc
+spec:
+  hosts:
+    - external-risk-api.com
+  http:
+    - name: simulate
+      match:
+        - headers:
+            test-data-simulation-action-name:
+              regex: ".+"
+      route:
+        - destination:
+            host: microcks-svc.simulation-system.svc.cluster.local
+            port:
+              number: 9090
+    - name: real
+      route:
+        - destination:
+            host: external-risk-api.com
+            port:
+              number: 9003

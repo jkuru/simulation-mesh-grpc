@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: virtualization-framework
+  namespace: simulation-system
+  labels:
+    app: virtualization-framework
+    app.kubernetes.io/name: virtualization-framework
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: virtualization-framework
+  template:
+    metadata:
+      labels:
+        app: virtualization-framework
+        app.kubernetes.io/name: virtualization-framework
+      annotations:
+        # Prometheus scrape (operator product + controller-runtime metrics).
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: virtualization-framework
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: manager
+          image: virtualization-framework:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - --leader-elect=false
+            - --webhook-enabled=true
+            - --webhook-cert-dir=/tmp/k8s-webhook-server/serving-certs
+            - --metrics-bind-address=:8080
+            - --health-probe-bind-address=:8081
+          env:
+            - name: ENVIRONMENT
+              value: "dev"
+            - name: SYSTEM_NAMESPACE
+              value: "simulation-system"
+            - name: MICROCKS_SERVICE
+              value: "microcks-svc.simulation-system.svc.cluster.local:9090"
+          ports:
+            - name: metrics
+              containerPort: 8080
+            - name: health
+              containerPort: 8081
+            - name: webhook
+              containerPort: 9443
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: virtualization-framework-webhook-certs
+        - name: tmp
+          emptyDir: {}

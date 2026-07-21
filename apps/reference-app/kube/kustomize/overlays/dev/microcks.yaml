@@ -1,0 +1,46 @@
+# Virtual gRPC backend (POC uses microcks-mock image, labeled as Microcks).
+# In production the framework deploys real Microcks and loads protos + scenarios.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microcks
+  namespace: simulation-system
+  labels:
+    app: microcks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microcks
+  template:
+    metadata:
+      labels:
+        app: microcks
+    spec:
+      containers:
+        - name: microcks
+          # Same binary as local microcks-mock — implements RiskService scenarios.
+          image: reference-app/microcks-mock:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+              name: grpc
+          env:
+            - name: GRPC_PORT
+              value: "9090"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microcks-svc
+  namespace: simulation-system
+  labels:
+    app: microcks
+spec:
+  selector:
+    app: microcks
+  ports:
+    - name: grpc
+      port: 9090
+      targetPort: grpc
+      appProtocol: grpc

@@ -1,0 +1,43 @@
+# Operator ServiceAccount permissions (control plane only — not for app teams).
+# See docs/RBAC.md for the full persona matrix.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: virtualization-framework-manager
+  labels:
+    app.kubernetes.io/name: virtualization-framework
+    simulation.io/rbac-persona: operator
+rules:
+  # Watch CRs + update finalizers / status. Teams create CRs; operator does not.
+  - apiGroups: ["simulation.io"]
+    resources: ["simulationmanifests"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["simulation.io"]
+    resources: ["simulationmanifests/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["simulation.io"]
+    resources: ["simulationmanifests/finalizers"]
+    verbs: ["update"]
+  # Managed Istio objects generated from SimulationManifest.
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices", "serviceentries", "destinationrules", "envoyfilters"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: virtualization-framework-manager
+  labels:
+    app.kubernetes.io/name: virtualization-framework
+    simulation.io/rbac-persona: operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: virtualization-framework-manager
+subjects:
+  - kind: ServiceAccount
+    name: virtualization-framework
+    namespace: simulation-system

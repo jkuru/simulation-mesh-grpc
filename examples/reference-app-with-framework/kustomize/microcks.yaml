@@ -1,0 +1,44 @@
+# Virtual backend stand-in (microcks-mock). Framework points VirtualService here.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microcks
+  namespace: simulation-system
+  labels:
+    app: microcks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microcks
+  template:
+    metadata:
+      labels:
+        app: microcks
+    spec:
+      containers:
+        - name: microcks
+          image: reference-app/microcks-mock:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+              name: grpc
+          env:
+            - name: GRPC_PORT
+              value: "9090"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microcks-svc
+  namespace: simulation-system
+  labels:
+    app: microcks
+spec:
+  selector:
+    app: microcks
+  ports:
+    - name: grpc
+      port: 9090
+      targetPort: grpc
+      appProtocol: grpc

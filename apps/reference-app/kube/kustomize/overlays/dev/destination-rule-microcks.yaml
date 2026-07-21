@@ -1,0 +1,16 @@
+# Prefer plaintext gRPC to Microcks on teaching clusters (no mesh mTLS required).
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: microcks-grpc
+  namespace: poc
+spec:
+  host: microcks-svc.simulation-system.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+    connectionPool:
+      http:
+        h2UpgradePolicy: UPGRADE
+    loadBalancer:
+      simple: ROUND_ROBIN

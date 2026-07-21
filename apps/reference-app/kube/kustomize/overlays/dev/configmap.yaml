@@ -1,0 +1,20 @@
+# Runtime config for mesh mode. App never dials Microcks directly —
+# EXTERNAL_RISK_ENDPOINT is the logical third-party host; Istio routes it.
+# Per-service GRPC_PORT is set on each Deployment (not here).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: poc-config
+  namespace: poc
+data:
+  LOG_LEVEL: "info"
+
+  # payment-gateway → fraud-checker
+  FRAUD_CHECKER_ENDPOINT: "fraud-checker.poc.svc.cluster.local:9002"
+
+  # fraud-checker — mesh mode: dial logical third-party host (ServiceEntry).
+  # Requires Istio DNS capture on fraud-checker (see kustomize patch annotations).
+  SIMULATION_MODE: "mesh"
+  EXTERNAL_RISK_ENDPOINT: "external-risk-api.com:9003"
+  # Present for local-mode parity / debugging only; unused when SIMULATION_MODE=mesh
+  MICROCKS_ENDPOINT: "microcks-svc.simulation-system.svc.cluster.local:9090"
