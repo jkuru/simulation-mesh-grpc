@@ -40,8 +40,9 @@ internals**. The operator generates those objects from the CR.
 | Project | Path | Role |
 | --- | --- | --- |
 | **reference-app** | [`apps/reference-app`](apps/reference-app/) | Sample payment app (empathy + mesh literacy) |
-| **virtualization-framework** | [`apps/virtualization-framework`](apps/virtualization-framework/) | **Platform product** (operator + CRD) |
+| **virtualization-framework** | [`apps/virtualization-framework`](apps/virtualization-framework/) | **Platform product** (operator + CRD + webhooks) |
 | **reference-app-with-framework** | [`examples/reference-app-with-framework`](examples/reference-app-with-framework/) | **Golden path** consumer recipe |
+| **virtualization-contract** | [`packages/virtualization-contract`](packages/virtualization-contract/) | Shared header/label/backend constants |
 
 ```
 Empathy     make demo                 (local, no mesh)
