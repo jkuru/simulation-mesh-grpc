@@ -1,11 +1,39 @@
+# OS / editor
 .DS_Store
+Thumbs.db
 *.log
 .idea/
 .vscode/
 *.swp
+*~
 
-# Go / POC build outputs (also ignored under apps/*)
+# Go build / test outputs
 **/bin/
 **/gen/
 **/coverage.out
+**/coverage.html
+*.coverprofile
 **/vendor/
+*.test
+*.exe
+*.out
+
+# Local webhook / TLS material (never commit)
+**/certs/
+*.pem
+*.key
+!**/testdata/**
+
+# Kind / kube local clutter
+kubeconfig
+*.kubeconfig
+
+# Env files with secrets
+.env
+.env.*
+!.env.example
+
+# Archives / large local artifacts
+*.tar
+*.tar.gz
+*.zip

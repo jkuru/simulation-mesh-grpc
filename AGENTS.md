@@ -1,6 +1,8 @@
-# AGENTS.md — servicemesh monorepo
+# AGENTS.md — simulation-mesh-grpc monorepo
 
 Rules for Grok (and compatible agents) in this repository.
+
+**Public name:** `simulation-mesh-grpc` (GitHub). Local directory may differ.
 
 ## Platform golden path (priority)
 
